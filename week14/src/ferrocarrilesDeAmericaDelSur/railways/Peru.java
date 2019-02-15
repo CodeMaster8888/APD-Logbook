@@ -10,24 +10,40 @@ import ferrocarrilesDeAmericaDelSur.tools.Delay;
  * safe joint operation of the railways.
  */
 public class Peru extends Railway {
-	/**
-	 * Change the parameters of the Delay constructor in the call of the superconstructor to
-	 * change the behaviour of this railway.
-	 * @throws SetUpError if there is an error in setting up the delay.
-	 */
-	public Peru() throws SetUpError {
-		super("Peru",new Delay(0.1,0.3));
-	}
+    /**
+     * Change the parameters of the Delay constructor in the call of the superconstructor to
+     * change the behaviour of this railway.
+     *
+     * @throws SetUpError if there is an error in setting up the delay.
+     */
+    public Peru() throws SetUpError {
+        super("Peru", new Delay(0.1, 0.3));
+    }
 
     /**
      * Run the train on the railway.
-	 * This method currently does not provide any synchronisation to avoid two trains being in the pass at the same time.
+     * This method currently does not provide any synchronisation to avoid two trains being in the pass at the same time.
      */
     public void runTrain() throws RailwaySystemError {
-    	Clock clock = getRailwaySystem().getClock();
-    	while (!clock.timeOut()) {
-    		choochoo();
-    		crossPass();
-    	}
+        Clock clock = getRailwaySystem().getClock();
+    	Railway nextRail = getRailwaySystem().getNextRailway(this);
+        while (!clock.timeOut()) {
+            choochoo();
+            getBasket().putStone(this);
+            while(nextRail.getBasket().hasStone(this)){
+                if (!(getSharedBasket().hasStone(this))){
+                    getBasket().takeStone(this);
+                    while(getSharedBasket().hasStone(this)){
+                        siesta();
+                    }
+                    getBasket().putStone(this);
+                }
+            }
+
+            //getSharedBasket().putStone(this);
+            crossPass();
+            getSharedBasket().takeStone(this);
+            getBasket().takeStone(this);
+        }
     }
 }
